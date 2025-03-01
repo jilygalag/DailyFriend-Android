@@ -4,6 +4,7 @@ import android.media.MediaPlayer
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -11,7 +12,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
@@ -22,10 +22,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.rememberAsyncImagePainter
+import coil.decode.SvgDecoder
+import coil.request.ImageRequest
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -38,15 +42,45 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun PickVoiceScreen() {
-    var selectedVoice by remember { mutableStateOf("") }
+    var selectedVoice by remember { mutableStateOf<VoiceOption?>(null) }
 
-    val voices = listOf(
-        "Meadow " to "https://static.dailyfriend.ai/conversations/samples/1/1/audio.mp3",
-        "Cypress" to "https://static.dailyfriend.ai/conversations/samples/2/1/audio.mp3",
-        "Iris" to "https://static.dailyfriend.ai/conversations/samples/3/1/audio.mp3",
-        "Hawke" to "https://static.dailyfriend.ai/conversations/samples/4/1/audio.mp3",
-        "Seren" to "https://static.dailyfriend.ai/conversations/samples/5/1/audio.mp3",
-        "Stone" to "https://static.dailyfriend.ai/conversations/samples/6/1/audio.mp3"
+    val voiceOptions = listOf(
+        VoiceOption(
+            "Meadow",
+            "https://static.dailyfriend.ai/conversations/samples/1/1/audio.mp3",
+            "https://static.dailyfriend.ai/conversations/samples/1/1/transcription.txt",
+            "https://static.dailyfriend.ai/images/voices/meadow.svg"
+        ),
+        VoiceOption(
+            "Cypress",
+            "https://static.dailyfriend.ai/conversations/samples/2/1/audio.mp3",
+            "https://static.dailyfriend.ai/conversations/samples/2/1/transcription.txt",
+            "https://static.dailyfriend.ai/images/voices/cypress.svg"
+        ),
+        VoiceOption(
+            "Iris",
+            "https://static.dailyfriend.ai/conversations/samples/3/1/audio.mp3",
+            "https://static.dailyfriend.ai/conversations/samples/3/1/transcription.txt",
+            "https://static.dailyfriend.ai/images/voices/iris.svg"
+        ),
+        VoiceOption(
+            "Hawke",
+            "https://static.dailyfriend.ai/conversations/samples/4/1/audio.mp3",
+            "https://static.dailyfriend.ai/conversations/samples/4/1/transcription.txt",
+            "https://static.dailyfriend.ai/images/voices/hawke.svg"
+        ),
+        VoiceOption(
+            "Seren",
+            "https://static.dailyfriend.ai/conversations/samples/5/1/audio.mp3",
+            "https://static.dailyfriend.ai/conversations/samples/5/1/transcription.txt",
+            "https://static.dailyfriend.ai/images/voices/seren.svg"
+        ),
+        VoiceOption(
+            "Stone",
+            "https://static.dailyfriend.ai/conversations/samples/6/1/audio.mp3",
+            "https://static.dailyfriend.ai/conversations/samples/6/1/transcription.txt",
+            "https://static.dailyfriend.ai/images/voices/stone.svg"
+        ),
     )
     var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
 
@@ -93,16 +127,16 @@ fun PickVoiceScreen() {
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(voices) { voice ->
-                VoiceOption(
-                    name = voice.first,
-                    isSelected = selectedVoice == voice.first,
+            items(voiceOptions) { voice ->
+                VoiceOptionView(
+                    voiceOption = voice,
+                    isSelected = selectedVoice?.name == voice.name,
                     onSelect = {
-                        selectedVoice = voice.first
+                        selectedVoice = voice
 
                         mediaPlayer?.release()
                         mediaPlayer = MediaPlayer().apply {
-                            setDataSource(voice.second)
+                            setDataSource(voice.audioStringUrl)
                             prepare()
                             start()
                         }
@@ -131,12 +165,16 @@ fun PickVoiceScreen() {
 }
 
 @Composable
-fun VoiceOption(name: String, isSelected: Boolean, onSelect: () -> Unit) {
+fun VoiceOptionView(voiceOption: VoiceOption, isSelected: Boolean, onSelect: () -> Unit) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(16.dp))
             .background(if (isSelected) Color(0xFFFFE0D4) else Color.White)
-            .border(1.dp, if (isSelected) Color(0xFFFF7D67) else Color.LightGray, RoundedCornerShape(16.dp))
+            .border(
+                1.dp,
+                if (isSelected) Color(0xFFFF7D67) else Color.LightGray,
+                RoundedCornerShape(16.dp)
+            )
             .clickable { onSelect() }
             .padding(16.dp)
             .aspectRatio(1f)
@@ -147,17 +185,15 @@ fun VoiceOption(name: String, isSelected: Boolean, onSelect: () -> Unit) {
             verticalArrangement = Arrangement.Center,  // Center children vertically
             horizontalAlignment = Alignment.CenterHorizontally  // Center children horizontally
         ) {
-            // Placeholder for Image/Icon
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .background(Color.LightGray, CircleShape)
+
+            SvgImage(
+                url = voiceOption.imageStringUrl
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = name,
+                text = voiceOption.name,
                 textAlign = TextAlign.Center,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold
@@ -184,3 +220,24 @@ fun VoiceOption(name: String, isSelected: Boolean, onSelect: () -> Unit) {
         }
     }
 }
+
+@Composable
+fun SvgImage(url: String) {
+    Image(
+        painter = rememberAsyncImagePainter(
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(url)
+                .decoderFactory(SvgDecoder.Factory())
+                .build()
+        ),
+        contentDescription = "SVG Image",
+        modifier = Modifier.size(100.dp)
+    )
+}
+
+data class VoiceOption(
+    val name: String,
+    val audioStringUrl: String,
+    val transcriptionStringUrl: String,
+    val imageStringUrl: String
+)
