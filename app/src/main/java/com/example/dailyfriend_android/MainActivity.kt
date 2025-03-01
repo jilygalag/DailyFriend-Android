@@ -38,6 +38,7 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
+import kotlin.random.Random
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -61,38 +62,38 @@ fun PickVoiceScreen(onSelect: (VoiceOption) -> Unit) {
     val voiceOptions = listOf(
         VoiceOption(
             "Meadow",
-            "https://static.dailyfriend.ai/conversations/samples/1/1/audio.mp3",
-            "https://static.dailyfriend.ai/conversations/samples/1/1/transcription.txt",
+            "https://static.dailyfriend.ai/conversations/samples/1/%d/audio.mp3",
+            "https://static.dailyfriend.ai/conversations/samples/1/%d/transcription.txt",
             "https://static.dailyfriend.ai/images/voices/meadow.svg"
         ),
         VoiceOption(
             "Cypress",
-            "https://static.dailyfriend.ai/conversations/samples/2/1/audio.mp3",
-            "https://static.dailyfriend.ai/conversations/samples/2/1/transcription.txt",
+            "https://static.dailyfriend.ai/conversations/samples/2/%d/audio.mp3",
+            "https://static.dailyfriend.ai/conversations/samples/2/%d/transcription.txt",
             "https://static.dailyfriend.ai/images/voices/cypress.svg"
         ),
         VoiceOption(
             "Iris",
-            "https://static.dailyfriend.ai/conversations/samples/3/1/audio.mp3",
-            "https://static.dailyfriend.ai/conversations/samples/3/1/transcription.txt",
+            "https://static.dailyfriend.ai/conversations/samples/3/%d/audio.mp3",
+            "https://static.dailyfriend.ai/conversations/samples/3/%d/transcription.txt",
             "https://static.dailyfriend.ai/images/voices/iris.svg"
         ),
         VoiceOption(
             "Hawke",
-            "https://static.dailyfriend.ai/conversations/samples/4/1/audio.mp3",
-            "https://static.dailyfriend.ai/conversations/samples/4/1/transcription.txt",
+            "https://static.dailyfriend.ai/conversations/samples/4/%d/audio.mp3",
+            "https://static.dailyfriend.ai/conversations/samples/4/%d/transcription.txt",
             "https://static.dailyfriend.ai/images/voices/hawke.svg"
         ),
         VoiceOption(
             "Seren",
-            "https://static.dailyfriend.ai/conversations/samples/5/1/audio.mp3",
-            "https://static.dailyfriend.ai/conversations/samples/5/1/transcription.txt",
+            "https://static.dailyfriend.ai/conversations/samples/5/%d/audio.mp3",
+            "https://static.dailyfriend.ai/conversations/samples/5/%d/transcription.txt",
             "https://static.dailyfriend.ai/images/voices/seren.svg"
         ),
         VoiceOption(
             "Stone",
-            "https://static.dailyfriend.ai/conversations/samples/6/1/audio.mp3",
-            "https://static.dailyfriend.ai/conversations/samples/6/1/transcription.txt",
+            "https://static.dailyfriend.ai/conversations/samples/6/%d/audio.mp3",
+            "https://static.dailyfriend.ai/conversations/samples/6/%d/transcription.txt",
             "https://static.dailyfriend.ai/images/voices/stone.svg"
         ),
     )
@@ -144,16 +145,9 @@ fun PickVoiceScreen(onSelect: (VoiceOption) -> Unit) {
                         selectedVoice = voice
 
                         mediaPlayer?.release()
-                        mediaPlayer = MediaPlayer().apply {
-                            setDataSource(voice.audioStringUrl)
-                            prepare()
-                            start()
-                            isPlaying = true
-                            setOnCompletionListener {
-                                release()
-                                isPlaying = false
-                            }
-                        }
+                        mediaPlayer = playAudio(voice.audioStringUrl, completion = {
+                            isPlaying = false
+                        })
                     }
                 )
             }
@@ -178,6 +172,19 @@ fun PickVoiceScreen(onSelect: (VoiceOption) -> Unit) {
             shape = RoundedCornerShape(24.dp)
         ) {
             Text(text = "Next", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+fun playAudio(url: String, completion: () -> Unit) : MediaPlayer {
+    val formattedUrl = String.format(url, Random.nextInt(1, 21))
+    return MediaPlayer().apply {
+        setDataSource(formattedUrl)
+        prepareAsync()
+        setOnPreparedListener { start() }
+        setOnCompletionListener {
+            release()
+            completion()
         }
     }
 }

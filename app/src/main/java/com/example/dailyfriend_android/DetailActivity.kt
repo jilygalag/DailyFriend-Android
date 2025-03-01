@@ -1,5 +1,6 @@
 package com.example.dailyfriend_android
 
+import android.content.Context
 import android.media.MediaPlayer
 import android.os.Build
 import android.os.Bundle
@@ -28,9 +29,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import java.net.HttpURLConnection
 import java.net.URL
+import kotlin.coroutines.resume
+import kotlin.random.Random
 
 class DetailActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -55,22 +60,26 @@ class DetailActivity : ComponentActivity() {
 
 @Composable
 fun DetailScreen(voiceOption: VoiceOption, onBackPressed: () -> Unit) {
+    var playCount by remember { mutableStateOf(0) }
     var isPlaying by remember { mutableStateOf(false) }
     var text by remember { mutableStateOf("Loading...") }
     var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
 
     LaunchedEffect(Unit) {
-        mediaPlayer = MediaPlayer().apply {
-            setDataSource(voiceOption.audioStringUrl) // ✅ Online URL
-            prepareAsync()
-            setOnPreparedListener { start() } // ✅ Play when ready
+        repeat(3) { count ->
+            val randomInt = Random.nextInt(1, 21)
+            val randomAudioUrl = String.format(voiceOption.audioStringUrl, randomInt)
+            val randomTranscriptionUrl = String.format(voiceOption.transcriptionStringUrl, randomInt)
+            text = fetchTextFromUrl(randomTranscriptionUrl)
+            playAudioFromUrl(randomAudioUrl)
+
         }
-        text = fetchTextFromUrl(voiceOption.transcriptionStringUrl)
+        isPlaying = false
     }
 
     DisposableEffect(Unit) {
         onDispose {
-            mediaPlayer?.release() // ✅ Clean up resources
+            mediaPlayer?.release()
         }
     }
 
@@ -97,6 +106,26 @@ fun DetailScreen(voiceOption: VoiceOption, onBackPressed: () -> Unit) {
             text,
             fontSize = 20.sp
         )
+    }
+}
+
+suspend fun playAudioFromUrl(url: String) {
+    return suspendCancellableCoroutine { continuation ->
+        val mediaPlayer = MediaPlayer().apply {
+            setDataSource(url)
+            prepareAsync()
+
+            setOnPreparedListener { start() }
+            setOnCompletionListener {
+                release()
+                continuation.resume(Unit)
+            }
+        }
+
+        // If coroutine is cancelled, release MediaPlayer
+        continuation.invokeOnCancellation {
+            mediaPlayer.release()
+        }
     }
 }
 
