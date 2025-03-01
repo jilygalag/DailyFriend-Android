@@ -30,6 +30,12 @@ import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import coil.decode.SvgDecoder
 import coil.request.ImageRequest
+import com.airbnb.lottie.LottieComposition
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.animateLottieCompositionAsState
+import com.airbnb.lottie.compose.rememberLottieComposition
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,6 +49,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun PickVoiceScreen() {
     var selectedVoice by remember { mutableStateOf<VoiceOption?>(null) }
+    var isPlaying by remember { mutableStateOf(false) }
 
     val voiceOptions = listOf(
         VoiceOption(
@@ -87,8 +94,7 @@ fun PickVoiceScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
-            .background(Color(0xFFFFF8F2)),
+            .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(modifier = Modifier.height(16.dp))
@@ -101,13 +107,9 @@ fun PickVoiceScreen() {
             color = Color.Black
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Icon(
-            imageVector = Icons.Default.RadioButtonChecked,
-            contentDescription = "Selected",
-            tint = Color(0xFFFF7D67),
-            modifier = Modifier.size(80.dp)
+        LottieFromUrl(
+            url = "https://static.dailyfriend.ai/images/mascot-animation.json",
+            isPlaying = isPlaying
         )
 
         // Subtitle
@@ -116,7 +118,7 @@ fun PickVoiceScreen() {
             fontSize = 14.sp,
             color = Color.Gray,
             textAlign = TextAlign.Center,
-            modifier = Modifier.padding(top = 8.dp, bottom = 16.dp)
+            modifier = Modifier.padding(bottom = 16.dp)
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -139,6 +141,11 @@ fun PickVoiceScreen() {
                             setDataSource(voice.audioStringUrl)
                             prepare()
                             start()
+                            isPlaying = true
+                            setOnCompletionListener {
+                                release()
+                                isPlaying = false
+                            }
                         }
                     }
                 )
@@ -232,6 +239,24 @@ fun SvgImage(url: String) {
         ),
         contentDescription = "SVG Image",
         modifier = Modifier.size(100.dp)
+    )
+}
+
+@Composable
+fun LottieFromUrl(url: String, isPlaying: Boolean) {
+    val composition by rememberLottieComposition(
+        LottieCompositionSpec.Url(url)
+    )
+    val progress by animateLottieCompositionAsState(
+        composition,
+        isPlaying = isPlaying,
+        iterations = LottieConstants.IterateForever
+    )
+
+    LottieAnimation(
+        composition = composition,
+        progress = { progress },
+        modifier = Modifier.size(200.dp)
     )
 }
 
