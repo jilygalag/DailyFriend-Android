@@ -197,13 +197,13 @@ fun VoiceOptionView(voiceOption: VoiceOption, isSelected: Boolean, onSelect: () 
             .clip(RoundedCornerShape(16.dp))
             .background(if (isSelected) Color(0xFFFFE0D4) else Color.White)
             .border(
-                1.dp,
+                2.dp,
                 if (isSelected) Color(0xFFFF7D67) else Color.LightGray,
                 RoundedCornerShape(16.dp)
             )
             .clickable { onSelect() }
             .padding(16.dp)
-            .aspectRatio(1f)
+            .height(80.dp)
     ) {
         Column(
             modifier = Modifier
@@ -257,7 +257,7 @@ fun SvgImage(url: String) {
                 .build()
         ),
         contentDescription = "SVG Image",
-        modifier = Modifier.size(100.dp)
+        modifier = Modifier.size(50.dp)
     )
 }
 
