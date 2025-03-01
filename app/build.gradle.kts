@@ -50,6 +50,8 @@ android {
 }
 
 dependencies {
+    // Material Icons Extended (for Radio Buttons & More)
+    implementation("androidx.compose.material:material-icons-extended")
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
