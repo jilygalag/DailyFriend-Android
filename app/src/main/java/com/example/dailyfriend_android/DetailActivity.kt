@@ -26,6 +26,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.Dispatchers
@@ -60,7 +61,6 @@ class DetailActivity : ComponentActivity() {
 
 @Composable
 fun DetailScreen(voiceOption: VoiceOption, onBackPressed: () -> Unit) {
-    var playCount by remember { mutableStateOf(0) }
     var isPlaying by remember { mutableStateOf(false) }
     var text by remember { mutableStateOf("Loading...") }
     var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
@@ -70,9 +70,9 @@ fun DetailScreen(voiceOption: VoiceOption, onBackPressed: () -> Unit) {
             val randomInt = Random.nextInt(1, 21)
             val randomAudioUrl = String.format(voiceOption.audioStringUrl, randomInt)
             val randomTranscriptionUrl = String.format(voiceOption.transcriptionStringUrl, randomInt)
+            isPlaying = true
             text = fetchTextFromUrl(randomTranscriptionUrl)
             playAudioFromUrl(randomAudioUrl)
-
         }
         isPlaying = false
     }
@@ -83,18 +83,18 @@ fun DetailScreen(voiceOption: VoiceOption, onBackPressed: () -> Unit) {
         }
     }
 
+    IconButton(
+        onClick = { onBackPressed() }
+    ) {
+        Icon(Icons.Default.ArrowBackIosNew, contentDescription = "Back")
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
-        horizontalAlignment = Alignment.Start
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        IconButton(
-            onClick = { onBackPressed() }
-        ) {
-            Icon(Icons.Default.ArrowBackIosNew, contentDescription = "Back")
-        }
-
         Spacer(modifier = Modifier.height(16.dp))
 
         LottieFromUrl(
@@ -104,7 +104,8 @@ fun DetailScreen(voiceOption: VoiceOption, onBackPressed: () -> Unit) {
 
         Text(
             text,
-            fontSize = 20.sp
+            fontSize = 20.sp,
+            textAlign = TextAlign.Center
         )
     }
 }

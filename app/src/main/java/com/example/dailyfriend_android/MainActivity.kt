@@ -165,6 +165,7 @@ fun PickVoiceScreen(onSelect: (VoiceOption) -> Unit) {
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color(0xFFFF7D67) // Gradient not supported, using solid
             ),
+            enabled = selectedVoice != null,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(8.dp)
@@ -267,14 +268,14 @@ fun LottieFromUrl(url: String, isPlaying: Boolean) {
     )
     val progress by animateLottieCompositionAsState(
         composition,
-        isPlaying = isPlaying,
-        iterations = LottieConstants.IterateForever
+        isPlaying = isPlaying
     )
 
     LottieAnimation(
         composition = composition,
         progress = { progress },
-        modifier = Modifier.size(200.dp)
+        modifier = Modifier.size(200.dp),
+        alignment = Alignment.Center
     )
 }
 
