@@ -1,7 +1,10 @@
 package com.example.dailyfriend_android
 
+import android.content.Intent
 import android.media.MediaPlayer
 import android.os.Bundle
+import android.os.Parcel
+import android.os.Parcelable
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
@@ -30,7 +33,6 @@ import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import coil.decode.SvgDecoder
 import coil.request.ImageRequest
-import com.airbnb.lottie.LottieComposition
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
@@ -41,13 +43,18 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            PickVoiceScreen()
+            PickVoiceScreen { selectedVoiceOption ->
+                val intent = Intent(this, DetailActivity::class.java).apply {
+                    putExtra("voice_option", selectedVoiceOption)
+                }
+                startActivity(intent)
+            }
         }
     }
 }
 
 @Composable
-fun PickVoiceScreen() {
+fun PickVoiceScreen(onSelect: (VoiceOption) -> Unit) {
     var selectedVoice by remember { mutableStateOf<VoiceOption?>(null) }
     var isPlaying by remember { mutableStateOf(false) }
 
@@ -156,7 +163,11 @@ fun PickVoiceScreen() {
 
         // Next Button
         Button(
-            onClick = { /* Handle Next */ },
+            onClick = {
+                selectedVoice?.let {
+                    onSelect(it)
+                }
+            },
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color(0xFFFF7D67) // Gradient not supported, using solid
             ),
@@ -265,4 +276,30 @@ data class VoiceOption(
     val audioStringUrl: String,
     val transcriptionStringUrl: String,
     val imageStringUrl: String
-)
+) : Parcelable {
+    constructor(parcel: Parcel) : this(
+        parcel.readString() ?: "",
+        parcel.readString() ?: "",
+        parcel.readString() ?: "",
+        parcel.readString() ?: "",
+    )
+
+    override fun writeToParcel(parcel: Parcel, flags: Int) {
+        parcel.writeString(name)
+        parcel.writeString(audioStringUrl)
+        parcel.writeString(transcriptionStringUrl)
+        parcel.writeString(imageStringUrl)
+    }
+
+    override fun describeContents(): Int = 0
+
+    companion object CREATOR : Parcelable.Creator<VoiceOption> {
+        override fun createFromParcel(parcel: Parcel): VoiceOption {
+            return VoiceOption(parcel)
+        }
+
+        override fun newArray(size: Int): Array<VoiceOption?> {
+            return arrayOfNulls(size)
+        }
+    }
+}
