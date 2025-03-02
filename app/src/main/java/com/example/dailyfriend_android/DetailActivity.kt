@@ -73,8 +73,10 @@ fun DetailScreen(voiceOption: VoiceOption, onBackPressed: () -> Unit) {
             isPlaying = true
             text = fetchTextFromUrl(randomTranscriptionUrl)
             playAudioFromUrl(randomAudioUrl)
+            if (count == 2) {
+                isPlaying = false
+            }
         }
-        isPlaying = false
     }
 
     DisposableEffect(Unit) {

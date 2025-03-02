@@ -26,10 +26,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import coil.compose.rememberAsyncImagePainter
 import coil.decode.SvgDecoder
 import coil.request.ImageRequest
@@ -99,6 +102,21 @@ fun PickVoiceScreen(onSelect: (VoiceOption) -> Unit) {
     )
     var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
 
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    DisposableEffect(Unit) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_PAUSE) {
+                isPlaying = false
+                mediaPlayer?.release()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -145,6 +163,7 @@ fun PickVoiceScreen(onSelect: (VoiceOption) -> Unit) {
                         selectedVoice = voice
 
                         mediaPlayer?.release()
+                        isPlaying = true
                         mediaPlayer = playAudio(voice.audioStringUrl, completion = {
                             isPlaying = false
                         })
@@ -268,7 +287,9 @@ fun LottieFromUrl(url: String, isPlaying: Boolean) {
     )
     val progress by animateLottieCompositionAsState(
         composition,
-        isPlaying = isPlaying
+        iterations = if (isPlaying) LottieConstants.IterateForever else 1,
+        isPlaying = isPlaying,
+        restartOnPlay = true
     )
 
     LottieAnimation(
